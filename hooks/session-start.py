@@ -32,7 +32,7 @@ SCRIPTS_DIR = INSTALL_DIR / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 try:
-    from config import DAILY_DIR, INDEX_FILE, INSTINCTS_DIR, KNOWLEDGE_DIR, WIKI_INDEX_FILE
+    from config import DAILY_DIR, DATA_DIR, INDEX_FILE, INSTINCTS_DIR, KNOWLEDGE_DIR, WIKI_INDEX_FILE
     from utils_projects import (
         article_matches_project,
         detect_project,
@@ -47,12 +47,13 @@ except ImportError:
 MAX_CONTEXT_CHARS = 20_000
 MAX_LOG_LINES = 30
 MAX_OTHER_PROJECT_ROWS = 40
+MIN_INSTINCT_CONFIDENCE = 0.5
 
 
 # ── stdin parsing ─────────────────────────────────────────────────────
 
 
-def read_hook_cwd() -> str | None:
+def _read_hook_cwd() -> str | None:
     try:
         raw = sys.stdin.read()
     except (OSError, ValueError):
@@ -67,8 +68,20 @@ def read_hook_cwd() -> str | None:
     return cwd if isinstance(cwd, str) and cwd else None
 
 
+_RESOLVED_CWD: str | None = None
+_CWD_RESOLVED = False
+
+
+def resolve_cwd() -> str:
+    global _RESOLVED_CWD, _CWD_RESOLVED
+    if not _CWD_RESOLVED:
+        _RESOLVED_CWD = _read_hook_cwd() or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+        _CWD_RESOLVED = True
+    return _RESOLVED_CWD or os.getcwd()
+
+
 def detect_current_project() -> dict | None:
-    cwd = read_hook_cwd() or os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+    cwd = resolve_cwd()
     try:
         project = detect_project(cwd)
     except Exception:
@@ -78,6 +91,14 @@ def detect_current_project() -> dict | None:
     except Exception:
         pass
     return project
+
+
+def _is_inside_vault(cwd: str) -> bool:
+    try:
+        Path(cwd).resolve().relative_to(DATA_DIR.resolve())
+        return True
+    except ValueError:
+        return False
 
 
 # ── Daily filter helpers ──────────────────────────────────────────────
@@ -152,14 +173,19 @@ def _classify_row(line: str, aliases: set[str]) -> str:
     return "other"
 
 
-def _brief_row(line: str) -> str:
+def _compact_row(line: str) -> str:
+    """Render an index.md row as `- [[link]] — summary _(projects)_`.
+
+    Drops the verbose `Compiled From` and `Updated` columns — they bloat
+    SessionStart inject without helping retrieval.
+    """
     cells = [c.strip() for c in line.strip().strip("|").split("|")]
     if len(cells) < 2:
         return line
     link = cells[0]
     summary = cells[1]
     projects = cells[2] if len(cells) > 2 else ""
-    proj_suffix = f" _({projects})_" if projects and projects != "-" else ""
+    proj_suffix = f" _({projects})_" if projects and projects not in ("-", "shared") else ""
     return f"- {link} — {summary}{proj_suffix}"
 
 
@@ -172,13 +198,13 @@ def split_index_by_scope(
     for raw_line in index_content.splitlines():
         line = raw_line.rstrip()
         if not line.startswith("|") or "[[" not in line:
-            current_block.append(line)
             continue
         scope = _classify_row(line, aliases) if aliases else "shared"
+        compact = _compact_row(line)
         if scope in ("current", "shared"):
-            current_block.append(line)
+            current_block.append(compact)
         else:
-            other_brief.append(f"  {_brief_row(line)}")
+            other_brief.append(f"  {compact}")
     return current_block, other_brief
 
 
@@ -229,13 +255,23 @@ def instincts_section() -> str:
             conf = 0
         return (-conf, x.get("last_seen", ""))
 
+    rendered = 0
     for inst in sorted(instincts, key=sort_key):
+        try:
+            conf_value = float(inst.get("confidence", 0))
+        except (TypeError, ValueError):
+            conf_value = 0.0
+        if conf_value < MIN_INSTINCT_CONFIDENCE:
+            continue
         trigger = (inst.get("trigger", "-") or "-")[:60]
         action = (inst.get("action", "-") or "-")[:60]
         domain = (inst.get("domain", "-") or "-")[:18]
         conf = inst.get("confidence", "?")
         last = inst.get("last_seen", "-")
         lines.append(f"| {trigger} | {action} | {domain} | {conf} | {last} |")
+        rendered += 1
+    if rendered == 0:
+        return f"_(нет instincts с confidence >= {MIN_INSTINCT_CONFIDENCE})_"
     return "\n".join(lines)
 
 
@@ -277,15 +313,19 @@ def get_recent_log(aliases: set[str] | None) -> str:
 # ── Wiki section ──────────────────────────────────────────────────────
 
 
-def wiki_index_section() -> str:
+def wiki_index_section(full: bool) -> str:
     if not WIKI_INDEX_FILE.exists():
         return "_(wiki/index.md отсутствует — внешний ingest ещё не начинался)_"
     text = WIKI_INDEX_FILE.read_text(encoding="utf-8")
-    lines = text.splitlines()
-    if lines and lines[0].startswith("# "):
-        lines = lines[1:]
-    stripped = [ln for ln in lines if ln.strip()]
-    return "\n".join(stripped)[:6000]
+    if full:
+        lines = text.splitlines()
+        if lines and lines[0].startswith("# "):
+            lines = lines[1:]
+        stripped = [ln for ln in lines if ln.strip()]
+        return "\n".join(stripped)[:6000]
+    page_count = sum(1 for ln in text.splitlines() if ln.strip().startswith("- [["))
+    rel = WIKI_INDEX_FILE.relative_to(DATA_DIR.parent) if WIKI_INDEX_FILE.is_relative_to(DATA_DIR.parent) else WIKI_INDEX_FILE
+    return f"_({page_count} страниц во `{rel}` — открой через `Read` при необходимости)_"
 
 
 # ── Context assembly ──────────────────────────────────────────────────
@@ -330,7 +370,10 @@ def build_context() -> str:
         parts.append("## Knowledge: Current + Shared\n\n(empty — no articles compiled yet)")
 
     parts.append("## Instincts (поведенческие паттерны, глобально)\n\n" + instincts_section())
-    parts.append("## Wiki (внешние источники)\n\n" + wiki_index_section())
+    parts.append(
+        "## Wiki (внешние источники)\n\n"
+        + wiki_index_section(full=_is_inside_vault(resolve_cwd()))
+    )
 
     recent_log = get_recent_log(aliases if aliases else None)
     parts.append(f"## Recent Daily Log\n\n{recent_log}")
