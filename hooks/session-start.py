@@ -7,7 +7,7 @@ Tiered output so memory is usable cross-project, not just accumulated:
   3. Knowledge: Other Projects (titles only) — awareness that it exists
   4. Instincts (ALL, no project filter) — behavioural patterns are portable
   5. Wiki Index (external sources) — always shown, topic-agnostic
-  6. Recent Daily Log (filtered to current project)
+  6. Daily Log pointer (path + session count, no inlined body)
 
 Clean-room skeleton: stdin parsing, context assembly, and tiered rendering
 were written from scratch against docs/architecture.ru.md §Hook System.
@@ -45,7 +45,6 @@ except ImportError:
 
 
 MAX_CONTEXT_CHARS = 20_000
-MAX_LOG_LINES = 30
 MAX_OTHER_PROJECT_ROWS = 40
 MIN_INSTINCT_CONFIDENCE = 0.5
 
@@ -278,36 +277,39 @@ def instincts_section() -> str:
 # ── Daily log ─────────────────────────────────────────────────────────
 
 
-def _filter_daily_by_project(lines: list[str], aliases: set[str]) -> list[str]:
-    result: list[str] = []
-    keep = True
-    for line in lines:
-        if line.startswith("## ") and not line.startswith("### "):
-            keep = True
-            result.append(line)
-            continue
-        if line.startswith("### "):
-            keep = _project_matches(_header_project(line), aliases)
-            if keep:
-                result.append(line)
-            continue
-        if keep:
-            result.append(line)
-    return result
+def daily_log_pointer(aliases: set[str] | None) -> str:
+    """Compact pointer to the daily log instead of inlining its tail.
 
-
-def get_recent_log(aliases: set[str] | None) -> str:
+    Daily logs are raw input for `compile.py` — their distilled lessons
+    end up in `knowledge/` after compilation. Inlining 30 lines here
+    duplicates what the index already covers; a pointer with session
+    count tells the model where to read on demand.
+    """
     today = datetime.now(timezone.utc).astimezone()
     for offset in range(2):
         date = today - timedelta(days=offset)
         log_path = DAILY_DIR / f"{date.strftime('%Y-%m-%d')}.md"
-        if log_path.exists():
-            lines = log_path.read_text(encoding="utf-8").splitlines()
-            if aliases:
-                lines = _filter_daily_by_project(lines, aliases)
-            recent = lines[-MAX_LOG_LINES:] if len(lines) > MAX_LOG_LINES else lines
-            return "\n".join(recent)
-    return "(no recent daily log)"
+        if not log_path.exists():
+            continue
+        text = log_path.read_text(encoding="utf-8")
+        all_sessions = [ln for ln in text.splitlines() if ln.startswith("### ")]
+        if aliases:
+            scoped = [
+                ln for ln in all_sessions
+                if _project_matches(_header_project(ln), aliases)
+            ]
+        else:
+            scoped = all_sessions
+        label = "сегодня" if offset == 0 else "вчера"
+        display = str(log_path).replace(str(Path.home()), "~", 1)
+        if scoped:
+            last = scoped[-1][4:].strip()
+            return (
+                f"{label}: `{display}` ({len(scoped)} сессий по проекту, "
+                f"последняя — {last}). Открой через `Read` для полного контекста."
+            )
+        return f"{label}: `{display}` — нет сессий по текущему проекту."
+    return "_(нет daily-логов за сегодня/вчера)_"
 
 
 # ── Wiki section ──────────────────────────────────────────────────────
@@ -375,8 +377,9 @@ def build_context() -> str:
         + wiki_index_section(full=_is_inside_vault(resolve_cwd()))
     )
 
-    recent_log = get_recent_log(aliases if aliases else None)
-    parts.append(f"## Recent Daily Log\n\n{recent_log}")
+    parts.append(
+        f"## Daily Log (pointer)\n\n{daily_log_pointer(aliases if aliases else None)}"
+    )
 
     context = "\n\n---\n\n".join(parts)
     if len(context) > MAX_CONTEXT_CHARS:

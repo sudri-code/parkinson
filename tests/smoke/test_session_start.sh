@@ -42,7 +42,7 @@ expected_fragments = [
     "Knowledge: Current + Shared",
     "Instincts",
     "Wiki",
-    "Recent Daily Log",
+    "Daily Log (pointer)",
 ]
 missing = [f for f in expected_fragments if f not in ctx]
 assert not missing, f"missing sections: {missing}"
