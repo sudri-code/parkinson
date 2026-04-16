@@ -165,7 +165,12 @@ def _call_agent(context: str) -> str | None:
             return "".join(collected).strip()
 
         raw = anyio.run(_run)
-        if raw.strip() == "FLUSH_OK" or not raw.strip():
+        stripped = raw.strip()
+        if not stripped:
+            LOGGER.info("Agent returned empty response (no AssistantMessage text blocks)")
+            return None
+        if stripped == "FLUSH_OK":
+            LOGGER.info("Agent explicitly returned FLUSH_OK")
             return None
         return raw
     except Exception as exc:
