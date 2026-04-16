@@ -107,13 +107,54 @@ else
     echo "  Or open both files and copy the \`hooks\` section manually."
 fi
 
-# ── 7. Smoke check ────────────────────────────────────────────────────
+# ── 7. (Optional) parkinson-aware snippet for ~/.claude/CLAUDE.md ─────
+
+CLAUDE_MD="$HOME/.claude/CLAUDE.md"
+SNIPPET_MARKER="<!-- BEGIN: parkinson-instructions -->"
+
+if [[ "${LANG:-}" == ru* ]] || [[ "${LC_ALL:-}" == ru* ]]; then
+    SNIPPET="$REPO_ROOT/templates/global-claude-md-snippet.ru.md"
+else
+    SNIPPET="$REPO_ROOT/templates/global-claude-md-snippet.md"
+fi
+
+echo ""
+if [ -f "$CLAUDE_MD" ] && grep -qF "$SNIPPET_MARKER" "$CLAUDE_MD"; then
+    echo "✓ Parkinson snippet already present in $CLAUDE_MD"
+elif [ ! -t 0 ]; then
+    echo "ℹ Non-interactive shell — skipping CLAUDE.md prompt."
+    echo "  To add parkinson-aware instructions later:"
+    echo "    cat $SNIPPET >> $CLAUDE_MD"
+else
+    echo "Optional: append parkinson-aware instructions to $CLAUDE_MD"
+    echo "  (helps Claude scan the SessionStart inject before answering 'what is X?')."
+    echo ""
+    echo "Snippet preview:"
+    sed 's/^/  | /' "$SNIPPET"
+    echo ""
+    read -r -p "Append now? [y/N] " reply
+    case "$reply" in
+        [yY]|[yY][eE][sS])
+            mkdir -p "$(dirname "$CLAUDE_MD")"
+            if [ -f "$CLAUDE_MD" ] && [ -s "$CLAUDE_MD" ]; then
+                printf "\n" >> "$CLAUDE_MD"
+            fi
+            cat "$SNIPPET" >> "$CLAUDE_MD"
+            echo "✓ Appended to $CLAUDE_MD"
+            ;;
+        *)
+            echo "ℹ Skipped. Manually copy from $SNIPPET when ready."
+            ;;
+    esac
+fi
+
+# ── 8. Smoke check ────────────────────────────────────────────────────
 
 echo ""
 echo "Smoke check — resolved paths:"
 uv run --quiet python scripts/config.py --print | head -12 | sed 's/^/  /'
 
-# ── 8. Next steps ─────────────────────────────────────────────────────
+# ── 9. Next steps ─────────────────────────────────────────────────────
 
 cat <<EOF
 

@@ -118,6 +118,59 @@ def _wire_hooks() -> None:
           f" pathlib.Path(r'{settings}').write_text(json.dumps(a, indent=2))\"")
 
 
+def _offer_claude_md_snippet() -> None:
+    """Optionally append parkinson-aware instructions to ~/.claude/CLAUDE.md.
+
+    Idempotent via the `<!-- BEGIN: parkinson-instructions -->` marker.
+    Skipped silently in non-interactive shells.
+    """
+    claude_md = Path.home() / ".claude" / "CLAUDE.md"
+    marker = "<!-- BEGIN: parkinson-instructions -->"
+
+    locale = (os.environ.get("LANG") or os.environ.get("LC_ALL") or "").lower()
+    name = "global-claude-md-snippet.ru.md" if locale.startswith("ru") else "global-claude-md-snippet.md"
+    snippet = REPO_ROOT / "templates" / name
+
+    if not snippet.is_file():
+        print(f"WARN: snippet template missing at {snippet}")
+        return
+
+    print()
+    if claude_md.is_file() and marker in claude_md.read_text(encoding="utf-8"):
+        print(f"✓ Parkinson snippet already present in {claude_md}")
+        return
+
+    if not sys.stdin.isatty():
+        print("ℹ Non-interactive shell — skipping CLAUDE.md prompt.")
+        print(f"  To add parkinson-aware instructions later, append the contents of:")
+        print(f"    {snippet}")
+        print(f"  to:")
+        print(f"    {claude_md}")
+        return
+
+    print(f"Optional: append parkinson-aware instructions to {claude_md}")
+    print("  (helps Claude scan the SessionStart inject before answering 'what is X?').")
+    print()
+    print("Snippet preview:")
+    for line in snippet.read_text(encoding="utf-8").splitlines():
+        print(f"  | {line}")
+    print()
+
+    try:
+        reply = input("Append now? [y/N] ").strip().lower()
+    except EOFError:
+        reply = ""
+
+    if reply in ("y", "yes"):
+        claude_md.parent.mkdir(parents=True, exist_ok=True)
+        existing = claude_md.read_text(encoding="utf-8") if claude_md.is_file() else ""
+        sep = "\n" if existing and not existing.endswith("\n") else ""
+        claude_md.write_text(existing + sep + snippet.read_text(encoding="utf-8"), encoding="utf-8")
+        print(f"✓ Appended to {claude_md}")
+    else:
+        print(f"ℹ Skipped. Manually copy from {snippet} when ready.")
+
+
 def _smoke_check() -> None:
     print()
     print("Smoke check — resolved paths:")
@@ -160,6 +213,7 @@ def main() -> int:
     _create_dirs(data_dir)
     _copy_templates(data_dir)
     _wire_hooks()
+    _offer_claude_md_snippet()
     _smoke_check()
     _next_steps()
     return 0

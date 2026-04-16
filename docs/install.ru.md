@@ -38,6 +38,7 @@ uv run python bootstrap.py
 - Копирует шаблоны (только если файлы отсутствуют): `projects.json`, `knowledge/index.md`, `knowledge/log.md`.
 - Если у вас нет `~/.claude/settings.json` — копирует полный пример из `examples/.claude/settings.json` с подстановкой абсолютного пути репо вместо `__REPO_ROOT__`.
 - Если `~/.claude/settings.json` уже существует — печатает инструкцию для ручного merge (готовую `jq` команду).
+- **Опционально** (только в interactive-shell, после явного `y`): добавляет к `~/.claude/CLAUDE.md` snippet с инструкцией ассистенту сначала проверять SessionStart-инжект при вопросах вида «что такое X?». Идемпотентно через маркер `<!-- BEGIN: parkinson-instructions -->`. Snippet берётся из `templates/global-claude-md-snippet.ru.md` (если `LANG=ru*`) или `templates/global-claude-md-snippet.md`.
 - Делает smoke-check: `uv run python scripts/config.py --print`.
 
 ### 3. Merge хуков (если settings уже существует)

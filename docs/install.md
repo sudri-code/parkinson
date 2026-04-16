@@ -38,6 +38,7 @@ The installer:
 - Copies templates (only if the target file is missing): `projects.json`, `knowledge/index.md`, `knowledge/log.md`.
 - If you have no `~/.claude/settings.json`, copies the full example from `examples/.claude/settings.json` with an absolute repo path substituted for `__REPO_ROOT__`.
 - If `~/.claude/settings.json` already exists, does not overwrite — prints a merge command you can run manually (a ready-to-use `jq` snippet).
+- **Optionally** (interactive shell only, after explicit `y` confirmation): appends a snippet to `~/.claude/CLAUDE.md` instructing the assistant to scan the SessionStart inject before answering "what is X?". Idempotent via a `<!-- BEGIN: parkinson-instructions -->` marker. Source: `templates/global-claude-md-snippet.ru.md` (if `LANG=ru*`) or `templates/global-claude-md-snippet.md`.
 - Runs a smoke check: `uv run python scripts/config.py --print`.
 
 ### 3. Merge hooks (if settings already exists)
