@@ -58,6 +58,8 @@ mkdir -p \
     "$DATA_DIR/knowledge/connections" \
     "$DATA_DIR/knowledge/qa" \
     "$DATA_DIR/knowledge/instincts" \
+    "$DATA_DIR/wiki" \
+    "$DATA_DIR/raw/assets" \
     "$DATA_DIR/reports/agentshield" \
     "$REPO_ROOT/observations/archive" \
     "$REPO_ROOT/state/tool-counts"

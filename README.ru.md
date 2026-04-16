@@ -102,11 +102,22 @@ uv run python scripts/instincts.py prune               #   удалить уст
 
 ---
 
+## Ingest внешних источников (опционально)
+
+Слой `data/wiki/` предназначен для знания из статей и документации. Рекомендуемый браузерный flow:
+
+- **[Obsidian Web Clipper](https://obsidian.md/clipper)** — официальный extension, сохраняет веб-страницы в `data/raw/` как markdown с frontmatter.
+- **Local Images Plus** — Obsidian community-плагин, скачивает все внешние изображения в `data/raw/assets/` локально (чтобы клипы оставались читаемы оффлайн).
+
+Установка и настройка — см. [docs/install.ru.md](docs/install.ru.md#ingest-setup-obsidian-web-clipper--local-images-plus-опционально).
+
+---
+
 ## Документация
 
 - [docs/architecture.ru.md](docs/architecture.ru.md) — полная спека архитектуры
 - [docs/conventions.ru.md](docs/conventions.ru.md) — конвенции страниц
-- [docs/install.ru.md](docs/install.ru.md) — установка пошагово
+- [docs/install.ru.md](docs/install.ru.md) — установка пошагово (включая ingest-инструменты)
 - [docs/hooks-reference.ru.md](docs/hooks-reference.ru.md) — 5 хуков и их triggers
 - [docs/clean-room-provenance.md](docs/clean-room-provenance.md) — audit trail
 

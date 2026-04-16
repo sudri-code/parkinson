@@ -129,3 +129,84 @@ rm -rf /path/to/parkinson
 **Хуки не срабатывают в Claude Code** — проверьте `~/.claude/settings.json` синтаксис и абсолютные пути (не `__REPO_ROOT__`).
 
 **«ANTHROPIC_API_KEY not found»** — у вас Pro-подписка. Добавьте ключ в `.env`.
+
+---
+
+## Ingest-setup: Obsidian Web Clipper + Local Images Plus (опционально)
+
+Слой `data/wiki/` в parkinson предназначен для знания из внешних источников (статьи, READMEs, документация). Чтобы складывать туда веб-страницы прямо из браузера в markdown-формате — используйте **Obsidian Web Clipper** и **Local Images Plus**.
+
+### 1. Открыть `data/` как Obsidian vault
+
+Оба инструмента работают через Obsidian. Откройте папку `data/` (или то, что у вас в `PARKINSON_DATA_DIR`) как vault:
+
+1. Скачать Obsidian: [obsidian.md](https://obsidian.md) (бесплатно для личного использования).
+2. Open folder as vault → выбрать `<repo>/data/` (или ваш `PARKINSON_DATA_DIR`).
+
+В vault'е появятся ваши `daily/`, `knowledge/`, `wiki/` — Obsidian понимает `[[wiki-ссылки]]` нативно, даёт graph view и backlinks.
+
+### 2. Obsidian Web Clipper
+
+Официальный browser-extension от Obsidian: сохраняет веб-страницы в vault как markdown-файлы с frontmatter.
+
+**Установка:**
+
+1. Открыть [obsidian.md/clipper](https://obsidian.md/clipper).
+2. Установить extension для своего браузера (Chrome, Safari, Firefox, Edge — все поддерживаются).
+3. В настройках extension:
+   - **Vault:** выбрать тот же vault, что открыли в п. 1.
+   - **Default folder:** `raw/` — все клипы будут падать туда.
+   - **Template:** базовый или кастомный. Рекомендуемые поля в frontmatter:
+     ```yaml
+     ---
+     title: "{{title}}"
+     source: "{{url}}"
+     author: "{{author}}"
+     published: "{{published}}"
+     tags: [clipped]
+     created: "{{date}}"
+     ---
+     ```
+
+**Использование:**
+
+Open the browser extension → клик «Save to Obsidian» на любой странице → markdown-файл появится в `data/raw/`.
+
+После клипа — запустите обычный wiki ingest-workflow (вручную через LLM):
+- прочитать файл из `raw/`
+- создать страницу типа `source` в `data/wiki/`
+- обновить `data/wiki/index.md` и `data/wiki/log.md`
+
+См. `docs/conventions.ru.md` — раздел «Ingest» для деталей workflow.
+
+### 3. Local Images Plus
+
+Community-плагин Obsidian: автоматически скачивает все внешние изображения (`![alt](https://...)`) в локальную папку vault'а. Нужен потому что Web Clipper сохраняет изображения как ссылки на CDN — при потере интернета или при удалении страницы-источника они пропадут.
+
+**Установка:**
+
+1. В Obsidian: **Settings → Community plugins → Turn on community plugins** (первый раз потребуется подтвердить — это нормально, plugin open-source).
+2. **Browse** → поиск «Local Images Plus» → **Install** → **Enable**.
+3. В настройках плагина:
+   - **Media storage directory:** `raw/assets/` — все изображения будут падать туда.
+   - **Apply to newly added files:** ON — автоматически для новых клипов.
+   - **Recursive:** можно однократно прогнать на существующих `raw/*.md`.
+
+**Проверка:**
+
+Сохраните любую веб-страницу через Web Clipper → подождите ~5-10 сек (Local Images Plus работает по триггеру file-modified) → изображения в `data/raw/assets/`, ссылки в markdown переписаны на локальные.
+
+### 4. Итоговый flow
+
+```
+Браузер → Web Clipper → data/raw/<slug>.md
+                      → Local Images Plus → data/raw/assets/<images>
+                      → (вручную) LLM ingest → data/wiki/<slug>.md (type: source)
+                      → обновить data/wiki/index.md + log.md
+```
+
+Папки `data/raw/` и `data/raw/assets/` создаются install-скриптом автоматически. Если у вас старая установка без этих папок — создайте вручную:
+
+```bash
+mkdir -p "$PARKINSON_DATA_DIR/raw/assets"
+```

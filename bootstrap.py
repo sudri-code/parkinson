@@ -63,6 +63,8 @@ def _create_dirs(data_dir: Path) -> None:
         data_dir / "knowledge" / "connections",
         data_dir / "knowledge" / "qa",
         data_dir / "knowledge" / "instincts",
+        data_dir / "wiki",
+        data_dir / "raw" / "assets",
         data_dir / "reports" / "agentshield",
         REPO_ROOT / "observations" / "archive",
         REPO_ROOT / "state" / "tool-counts",
