@@ -44,6 +44,7 @@ from config import (
 )
 from utils import (
     body_word_count,
+    extract_message_text,
     extract_wikilinks,
     file_hash,
     list_wiki_articles,
@@ -324,7 +325,7 @@ def check_contradictions() -> list[dict]:
                     max_turns=1,
                 ),
             ):
-                text = getattr(message, "text", None) or ""
+                text = extract_message_text(message)
                 if text:
                     collected.append(text)
             raw = "".join(collected).strip()

@@ -48,7 +48,7 @@ from config import (
     now_local,
     today_iso,
 )
-from utils import atomic_write_text, file_hash, setup_logger
+from utils import atomic_write_text, extract_message_text, file_hash, setup_logger
 from utils_projects import scrub_secrets, write_atomic_json
 
 
@@ -159,7 +159,7 @@ def _call_agent(context: str) -> str | None:
                     max_turns=2,
                 ),
             ):
-                text = getattr(message, "text", None) or ""
+                text = extract_message_text(message)
                 if text:
                     collected.append(text)
             return "".join(collected).strip()

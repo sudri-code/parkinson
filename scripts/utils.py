@@ -45,6 +45,29 @@ def slugify(text: str) -> str:
     return collapsed.strip("-")
 
 
+# ── Agent SDK message text extraction ─────────────────────────────────
+
+
+def extract_message_text(message: object) -> str:
+    """Concatenate text from all TextBlocks in an Agent SDK message.
+
+    `AssistantMessage.content` is `list[ContentBlock]`; only `TextBlock`
+    carries `.text`. `UserMessage.content` may be a plain str or the same
+    list form. Other message types (System/Result) have no text payload.
+    """
+    content = getattr(message, "content", None)
+    if isinstance(content, str):
+        return content
+    if not isinstance(content, list):
+        return ""
+    parts: list[str] = []
+    for block in content:
+        block_text = getattr(block, "text", None)
+        if isinstance(block_text, str) and block_text:
+            parts.append(block_text)
+    return "".join(parts)
+
+
 # ── Hashing ───────────────────────────────────────────────────────────
 
 

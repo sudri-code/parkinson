@@ -30,6 +30,7 @@ from config import (
 )
 from utils import (
     atomic_write_text,
+    extract_message_text,
     list_wiki_articles,
     read_index,
     slugify,
@@ -95,7 +96,7 @@ def _call_agent(question: str, bundle: str) -> str:
                     max_turns=1,
                 ),
             ):
-                text = getattr(message, "text", None) or ""
+                text = extract_message_text(message)
                 if text:
                     collected.append(text)
             return "".join(collected).strip() or "(empty response)"

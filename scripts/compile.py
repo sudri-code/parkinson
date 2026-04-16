@@ -31,6 +31,7 @@ from config import (
 )
 from utils import (
     atomic_write_text,
+    extract_message_text,
     file_hash,
     setup_logger,
 )
@@ -143,7 +144,7 @@ def _run_agent(prompt: str) -> tuple[bool, str]:
                     max_turns=30,
                 ),
             ):
-                text = getattr(message, "text", None) or ""
+                text = extract_message_text(message)
                 if text:
                     collected.append(text)
             return "".join(collected)
