@@ -7,6 +7,8 @@
 структурированные концепт-статьи с перекрёстными ссылками — которые потом
 инжектируются обратно в каждую новую сессию.
 
+> 📄 Документация доступна на двух языках: **русский** (этот файл + `docs/*.ru.md`) и **[English](README.md)** (`docs/*.md`).
+
 ---
 
 ## Как это работает
@@ -130,6 +132,69 @@ uv run python scripts/instincts.py prune               #   удалить уст
 понимает *что* ты спрашиваешь; cosine similarity ищет только похожие
 слова. RAG становится необходим примерно с 2000+ статей, когда индекс
 перестаёт влезать в контекст.
+
+---
+
+## Плюсы и минусы
+
+### Плюсы
+
+- **Index-guided retrieval выигрывает у RAG на персональном масштабе.**
+  Нет embedding-пайплайна, нет vector DB, нет rebuild-ов индекса.
+  Retrieval полностью аудируемый — видно, какие статьи LLM выбрал.
+- **Filesystem-native.** Все артефакты — plain `.md` под `data/`. Сразу
+  работает в Obsidian (graph view, backlinks, поиск), в grep, git,
+  Dropbox/iCloud-sync, в любом редакторе.
+- **Hooks-driven, без демона.** Захват и auto-compile срабатывают на
+  события Claude Code — ни cron, ни фонового сервиса присматривать не
+  нужно.
+- **Multi-project из коробки.** Один vault хранит знание всех твоих
+  проектов без пересечений. SessionStart показывает только строки в
+  scope текущего проекта плюс shared; остальные проекты видны только
+  заголовками.
+- **Слой behavioural instincts.** Паттерны работы с инструментами
+  извлекаются и оцениваются по confidence — всплывают личные привычки
+  workflow, которые concept-статьи не фиксируют.
+- **Local-first, privacy-respecting.** Ничего не уходит с машины, кроме
+  промптов в Claude API (как и при обычной работе с Claude Code).
+  Никакого third-party sync, telemetry, cloud-хранилищ.
+- **Low-maintenance для большинства.** `install.sh` идемпотентный,
+  auto-register разбирается с новыми проектами, compilation
+  автоматически запускается после 18:00.
+- **Clean-room атрибуция.** Релиз безопасен по лицензии — core-скрипты
+  написаны с нуля по спеке, MIT-фрагменты явно атрибутированы.
+
+### Минусы
+
+- **Масштаб ограничен ~2000 статей.** После этого master-индекс перестаёт
+  влезать в контекст — придётся добавлять hybrid RAG (keyword +
+  semantic) как retrieval-слой.
+- **Только Claude Code.** Хуки специфичны для Claude Code; Cursor,
+  Codex, OpenCode и прочие из коробки не поддерживаются (потребуются
+  per-harness адаптеры).
+- **Нужна подписка Claude или API-кредиты.** Claude Agent SDK входит в
+  Max / Team / Enterprise планы; Pro-пользователям нужен
+  `ANTHROPIC_API_KEY` с metered billing.
+- **Нетривиальная стоимость compile.** Компиляция одного daily на
+  выросшем KB ~$0.45–0.65; для heavy-users может накапливаться. Flush
+  (~$0.02–0.05/сессия) и lint с contradictions (~$0.15–0.25)
+  добавляются сверху.
+- **Порог: Python 3.12 + `uv`.** Для разработчика не проблема;
+  не-технический пользователь не установит.
+- **Только terminal + Obsidian.** Нет веб-UI, нет мобильного
+  приложения, нет team-collaboration. Multi-device sync — через git /
+  Dropbox / iCloud, каждый выбирает свой вариант.
+- **Split RU ↔ EN в промптах.** `synthesize_instincts.py` по умолчанию
+  на русском (под личный use-case автора). Override возможен, но
+  language-switch ещё нет.
+- **Scrub-секретов — best-effort.** `scrub_secrets` ловит типичные
+  `key=value`, но adversarial input в `observations.jsonl` всё ещё
+  может утечь. Проверьте, прежде чем шарить `data/`.
+- **Нет встроенного team-mode.** `projects.json` — single-user. Merge
+  двух пользовательских KB требует ручного конфликт-резолвинга.
+- **Зависит от upstream-API.** Любое breaking-change в hook-контрактах
+  Claude Code или Agent SDK streaming потребует патча — никакого
+  abstraction-слоя сверху нет.
 
 ---
 
