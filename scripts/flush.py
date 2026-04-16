@@ -46,6 +46,7 @@ from config import (
     SCRIPTS_DIR as _SCRIPTS_DIR,
     STATE_FILE,
     now_local,
+    today_display,
     today_iso,
 )
 from utils import atomic_write_text, extract_message_text, file_hash, setup_logger
@@ -192,7 +193,7 @@ def _append_daily_section(body: str, canonical: str) -> Path:
     )
     if not daily_path.exists():
         content = (
-            f"# Daily Log: {today_iso()}\n\n"
+            f"# Daily Log: {today_display()}\n\n"
             "## Sessions\n"
             f"{section}"
         )

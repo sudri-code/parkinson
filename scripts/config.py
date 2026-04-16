@@ -132,14 +132,14 @@ INSTINCT_SYNTHESIS_WINDOW_HOURS = _env_int("PARKINSON_INSTINCT_WINDOW_H", 24)
 COMPILE_AFTER_HOUR = _env_int("PARKINSON_COMPILE_AFTER_HOUR", 18)
 
 LOG_LEVEL = os.environ.get("PARKINSON_LOG_LEVEL", "INFO").upper()
-TIMEZONE = os.environ.get("PARKINSON_TIMEZONE", "UTC")
+TIMEZONE = os.environ.get("PARKINSON_TIMEZONE", "").strip()
 
 
 # ── Time helpers ──────────────────────────────────────────────────────
 
 
 def _tz():
-    if ZoneInfo is None:
+    if not TIMEZONE or ZoneInfo is None:
         return None
     try:
         return ZoneInfo(TIMEZONE)
@@ -161,6 +161,11 @@ def now_iso() -> str:
 def today_iso() -> str:
     """Current date as YYYY-MM-DD in the configured timezone."""
     return now_local().strftime("%Y-%m-%d")
+
+
+def today_display() -> str:
+    """Current date as DD.MM.YYYY (European display format)."""
+    return now_local().strftime("%d.%m.%Y")
 
 
 # ── CLI (sanity check) ────────────────────────────────────────────────

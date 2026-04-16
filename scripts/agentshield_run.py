@@ -102,7 +102,7 @@ def _append_critical_to_daily(findings: list[dict]) -> None:
     if not log_path.exists():
         DAILY_DIR.mkdir(parents=True, exist_ok=True)
         log_path.write_text(
-            f"# Daily Log: {today.strftime('%Y-%m-%d')}\n\n## Sessions\n\n## Memory Maintenance\n\n",
+            f"# Daily Log: {today.strftime('%d.%m.%Y')}\n\n## Sessions\n\n## Memory Maintenance\n\n",
             encoding="utf-8",
         )
     time_str = today.strftime("%H:%M")

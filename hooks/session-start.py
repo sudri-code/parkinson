@@ -294,7 +294,7 @@ def wiki_index_section() -> str:
 def build_context() -> str:
     parts: list[str] = []
     today = datetime.now(timezone.utc).astimezone()
-    parts.append(f"## Today\n{today.strftime('%A, %B %d, %Y')}")
+    parts.append(f"## Today\n{today.strftime('%d.%m.%Y (%A)')}")
 
     project = detect_current_project()
     if project and project.get("id") != "shared":
