@@ -286,14 +286,21 @@ updated: 2026-04-03
 - [self-contained bullets]
 
 ## Details
-[encyclopedic prose]
+[encyclopedic prose; target body ≥200 words — `sparse_article` threshold]
 
 ## Related Concepts
-- [[concepts/related]]
+- [[concepts/related]]   # bidirectional: the target article must link back
 
 ## Sources
 - [[daily/2026-04-01.md]]
 ```
+
+Quality requirements (enforced by lint):
+
+- **Body ≥200 words** (`sparse_article`). If you can't reach it, UPDATE an existing article rather than CREATE a new one.
+- **Reciprocity in `## Related Concepts`** (`missing_backlink`). If A → B, then B → A. Exception: a hub concept with 4+ peripheral inbound links — those are project-membership, not concept-relationship; drop the weak forward link in the source instead.
+- **Wiki-links must resolve.** Literal placeholders like `[[foo]]`, `[[slug]]`, `[[wikilinks]]` used as syntax examples break lint (`broken_link`) — describe the syntax in prose or backticks, not with real double-brackets.
+- **Orphan pages** (`orphan_page`): every new article needs at least one inbound link (from `## Related Concepts` of another article or from index.md).
 
 ### Connection (`knowledge/connections/`)
 

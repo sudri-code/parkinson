@@ -56,6 +56,9 @@ updated: YYYY-MM-DD
 - Wiki-страницы без пути (Obsidian разрешает по имени).
 - Raw-файлы с полным путём: `[[raw/статья.md]]`.
 - Knowledge-статьи с относительным путём от `knowledge/`: `[[concepts/supabase-auth]]`.
+- **Литералы-плейсхолдеры запрещены.** Примеры синтаксиса (`foo`, `slug`, «имя-файла») в двойных квадратных скобках ломают lint (`broken_link`). Описывать синтаксис в прозе или внутри backtick-инлайна без `[[…]]`.
+- **Двусторонность `## Related Concepts`.** Если статья A линкует на B, то в B обязана быть обратная ссылка на A (lint: `missing_backlink`). Исключение — hub-концепт с 4+ peripheral-входящих: вместо добавления weak reciprocal убирать weak forward-ссылку в source.
+- **Body ≥200 слов** для concept/connection (lint: `sparse_article`). Если контента меньше — UPDATE существующей статьи, не CREATE.
 
 ## Изображения
 

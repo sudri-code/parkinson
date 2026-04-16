@@ -285,14 +285,21 @@ updated: 2026-04-03
 - [самодостаточные буллеты]
 
 ## Details
-[энциклопедический текст]
+[энциклопедический текст; целевой объём body ≥200 слов — порог `sparse_article`]
 
 ## Related Concepts
-- [[concepts/related]]
+- [[concepts/related]]   # двусторонне: целевая статья обязана линковать обратно
 
 ## Sources
 - [[daily/2026-04-01.md]]
 ```
+
+Требования к качеству (проверяются lint):
+
+- **Body ≥200 слов** (`sparse_article`). Если не набирается — UPDATE существующей статьи, не CREATE.
+- **Reciprocity в `## Related Concepts`** (`missing_backlink`). Если A → B, то B → A. Исключение: hub-концепт с 4+ peripheral-входящих (project-membership ≠ concept-relationship; убирать weak forward-ссылку в source).
+- **Wiki-ссылки — только реальные.** Литералы вроде `[[foo]]`, `[[slug]]`, `[[wikilinks]]` как примеры синтаксиса ломают lint (`broken_link`) — писать прозой или backtick-прозой, не двойными квадратными скобками.
+- **Orphan-страницы** (`orphan_page`): каждая новая статья должна быть прилинкована хотя бы из одной существующей (в `## Related Concepts` или в index.md).
 
 ### Connection (`knowledge/connections/`)
 

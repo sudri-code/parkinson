@@ -56,6 +56,9 @@ updated: YYYY-MM-DD
 - Wiki pages without a path (Obsidian resolves by name).
 - Raw files with a full path: `[[raw/article.md]]`.
 - Knowledge articles with a relative path from `knowledge/`: `[[concepts/supabase-auth]]`.
+- **No literal placeholders.** Syntax examples like `foo`, `slug`, or `file-name` inside double-brackets break lint (`broken_link`). Describe the syntax in prose or inside backticks without the `[[…]]` wrapper.
+- **Bidirectional `## Related Concepts`.** If article A links to B, article B must link back to A (lint: `missing_backlink`). Exception — a hub concept with 4+ peripheral inbound links: remove the weak forward link in the source instead of adding a weak reciprocal.
+- **Body ≥200 words** for concepts and connections (lint: `sparse_article`). If content is shorter, UPDATE an existing article rather than CREATE a new one.
 
 ## Images
 
