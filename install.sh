@@ -124,13 +124,13 @@ if [ -f "$CLAUDE_MD" ] && grep -qF "$SNIPPET_MARKER" "$CLAUDE_MD"; then
 elif [ ! -t 0 ]; then
     echo "ℹ Non-interactive shell — skipping CLAUDE.md prompt."
     echo "  To add parkinson-aware instructions later:"
-    echo "    cat $SNIPPET >> $CLAUDE_MD"
+    echo "    sed -e 's|__DATA_DIR__|$DATA_DIR|g' -e 's|__REPO_ROOT__|$REPO_ROOT|g' $SNIPPET >> $CLAUDE_MD"
 else
     echo "Optional: append parkinson-aware instructions to $CLAUDE_MD"
     echo "  (helps Claude scan the SessionStart inject before answering 'what is X?')."
     echo ""
     echo "Snippet preview:"
-    sed 's/^/  | /' "$SNIPPET"
+    sed -e "s|__DATA_DIR__|$DATA_DIR|g" -e "s|__REPO_ROOT__|$REPO_ROOT|g" "$SNIPPET" | sed 's/^/  | /'
     echo ""
     read -r -p "Append now? [y/N] " reply
     case "$reply" in
@@ -139,7 +139,7 @@ else
             if [ -f "$CLAUDE_MD" ] && [ -s "$CLAUDE_MD" ]; then
                 printf "\n" >> "$CLAUDE_MD"
             fi
-            cat "$SNIPPET" >> "$CLAUDE_MD"
+            sed -e "s|__DATA_DIR__|$DATA_DIR|g" -e "s|__REPO_ROOT__|$REPO_ROOT|g" "$SNIPPET" >> "$CLAUDE_MD"
             echo "✓ Appended to $CLAUDE_MD"
             ;;
         *)
