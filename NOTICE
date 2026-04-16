@@ -1,0 +1,67 @@
+parkinson — personal knowledge-base compiler for AI coding sessions.
+Copyright (c) 2026 sudri-code. Licensed under MIT (see LICENSE).
+
+This project was written with the assistance of Anthropic's Claude Code,
+under the direction and review of the copyright holder.
+
+
+CONCEPTUAL INSPIRATIONS (no code reused)
+----------------------------------------
+
+1. Andrej Karpathy — "LLM Knowledge Base" concept.
+   https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
+
+   The index-based retrieval approach (read index.md, let the LLM choose
+   articles, skip RAG at personal scale) is directly inspired by this
+   public gist. No source code was available or consulted.
+
+2. Cole Medin — "claude-memory-compiler".
+   https://github.com/coleam00/claude-memory-compiler
+
+   Provided the initial idea of using Claude Code hooks (SessionEnd,
+   PreCompact, SessionStart) to automate transcript capture and
+   knowledge compilation. The upstream repository has no published
+   license; therefore the core scripts in this project (flush.py,
+   compile.py, query.py, lint.py, config.py, hook skeletons) were
+   written from scratch against the specification in
+   docs/architecture.ru.md without consulting upstream source code.
+   See docs/clean-room-provenance.md for the audit trail.
+
+
+MIT-LICENSED CODE FRAGMENTS
+---------------------------
+
+3. Affaan Mustafa — "everything-claude-code" (MIT License).
+   https://github.com/affaan-m/everything-claude-code
+
+   The following helpers in scripts/utils_projects.py are adapted from
+   ECC with the MIT license preserved:
+     - scrub_secrets
+     - write_atomic_json
+
+   Each adapted block carries an in-file attribution comment with the
+   upstream source path. Full MIT license text is reproduced below.
+
+
+   MIT License
+
+   Copyright (c) 2026 Affaan Mustafa
+
+   Permission is hereby granted, free of charge, to any person obtaining
+   a copy of this software and associated documentation files (the
+   "Software"), to deal in the Software without restriction, including
+   without limitation the rights to use, copy, modify, merge, publish,
+   distribute, sublicense, and/or sell copies of the Software, and to
+   permit persons to whom the Software is furnished to do so, subject to
+   the following conditions:
+
+   The above copyright notice and this permission notice shall be
+   included in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

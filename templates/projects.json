@@ -1,0 +1,9 @@
+{
+  "shared": {
+    "id": "shared",
+    "name": "shared",
+    "canonical": "Shared",
+    "aliases": ["shared", "all"],
+    "notes": "Кросс-проектные записи или без привязки к конкретному проекту. Создаётся install-скриптом. Новые проекты добавляются автоматически при первом detect через SessionStart хук."
+  }
+}

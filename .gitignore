@@ -1,0 +1,30 @@
+# Runtime data (never committed — user's personal knowledge)
+data/
+
+# Runtime state
+state/
+observations/
+scripts/last-flush.json
+scripts/state.json
+scripts/flush.log
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.env
+
+# Per-user pointer override (see config.py fallback chain)
+.parkinson-data-dir
+
+# Test fixture — created on demand by tests/smoke/test_session_start.sh
+tests/fixtures/git-repo/
+
+# macOS / editor noise
+.DS_Store
+.idea/
+.vscode/
+.obsidian/
+*.swp

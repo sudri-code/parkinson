@@ -1,0 +1,4 @@
+{"type":"message","message":{"role":"user","content":"Explain what a YAML frontmatter block is in a markdown file and when to use it."}}
+{"type":"message","message":{"role":"assistant","content":"YAML frontmatter is a metadata block at the very top of a markdown file, fenced by `---` on its own lines. It holds structured key-value data like title, tags, dates, and custom fields. Static site generators and note systems (Jekyll, Hugo, Obsidian) parse it to drive templating and indexing.\n\nUse it whenever a markdown document needs typed metadata separate from the narrative body."}}
+{"type":"message","message":{"role":"user","content":"Give me a minimal example for an Obsidian-style note."}}
+{"type":"message","message":{"role":"assistant","content":"```\n---\ntitle: My Note\ntags: [writing, reference]\ncreated: 2026-04-16\n---\n\n# My Note\n\nBody goes here.\n```"}}
