@@ -126,6 +126,20 @@ OBSERVATIONS_MAX_SIZE_MB = _env_int("PARKINSON_OBSERVATIONS_MAX_MB", 10)
 AGENTSHIELD_THROTTLE_HOURS = _env_int("PARKINSON_AGENTSHIELD_THROTTLE_H", 6)
 AGENTSHIELD_TIMEOUT_SEC = _env_int("PARKINSON_AGENTSHIELD_TIMEOUT_S", 60)
 
+# fnmatch-style globs applied to finding paths relative to the scan root
+# (~/.claude). Matches are dropped before summary/daily reporting.
+# Marketplace agent docs contain illustrative "bad pattern" snippets that
+# trigger false positives (e.g. `const password = "admin123"` in
+# security-reviewer.md's vulnerability catalogue).
+AGENTSHIELD_IGNORE_GLOBS = tuple(
+    p.strip()
+    for p in os.environ.get(
+        "PARKINSON_AGENTSHIELD_IGNORE",
+        "plugins/marketplaces/*",
+    ).split(":")
+    if p.strip()
+)
+
 INSTINCT_SYNTHESIS_MIN_OBSERVATIONS = _env_int("PARKINSON_INSTINCT_MIN_OBS", 20)
 INSTINCT_SYNTHESIS_WINDOW_HOURS = _env_int("PARKINSON_INSTINCT_WINDOW_H", 24)
 

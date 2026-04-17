@@ -10,6 +10,7 @@ Installation: npx downloads `ecc-agentshield` on first use (~1 MB).
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import logging
 import os
@@ -29,6 +30,7 @@ LOG_FILE = SCRIPTS_DIR / "flush.log"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from config import (  # noqa: E402
+    AGENTSHIELD_IGNORE_GLOBS,
     AGENTSHIELD_REPORTS_DIR,
     AGENTSHIELD_STATE_FILE,
     AGENTSHIELD_THROTTLE_HOURS,
@@ -86,6 +88,28 @@ def _run_scan() -> dict | None:
         return None
 
 
+def _is_ignored(finding: dict) -> bool:
+    if not AGENTSHIELD_IGNORE_GLOBS:
+        return False
+    raw = finding.get("file") or ""
+    if not raw:
+        return False
+    try:
+        rel = str(Path(raw).resolve().relative_to(Path(TARGET_PATH).resolve()))
+    except (ValueError, OSError):
+        rel = raw.lstrip("/")
+    return any(fnmatch.fnmatch(rel, g) for g in AGENTSHIELD_IGNORE_GLOBS)
+
+
+def _apply_ignore_filters(report: dict) -> int:
+    findings = report.get("findings", [])
+    kept = [f for f in findings if not _is_ignored(f)]
+    dropped = len(findings) - len(kept)
+    if dropped:
+        report["findings"] = kept
+    return dropped
+
+
 def _severity_counts(report: dict) -> Counter:
     counts: Counter = Counter()
     for f in report.get("findings", []):
@@ -132,6 +156,10 @@ def main() -> None:
     if report is None:
         logging.error("Scan failed after %.1fs", duration)
         return
+
+    dropped = _apply_ignore_filters(report)
+    if dropped:
+        logging.info("Ignored %d finding(s) via AGENTSHIELD_IGNORE_GLOBS", dropped)
 
     findings = report.get("findings", [])
     counts = _severity_counts(report)
